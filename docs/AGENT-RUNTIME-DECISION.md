@@ -33,7 +33,7 @@ Therefore, do not keep repairing this as the primary architecture. Preserve it a
 
 1. **Cloudflare Worker** — authenticated API entry point and health endpoint.
 2. **Cloudflare Agent / Durable Object** — durable identity and SQLite-backed task state; scheduled/recoverable execution instead of relying on a long-lived shell process.
-3. **Workers AI binding** — start with a model that supports tool calling and is available under the free daily allowance. No third-party model API key should be required for this path.
+3. **Workers AI binding** — the starter selects `@cf/zai-org/glm-4.7-flash`: official Cloudflare docs list function calling and Workers Free availability. Workers AI has a shared 10,000-Neuron daily free allowance; no paid fallback is configured. Live access still needs testing on the owner's account.
 4. **Narrow tools** — explicit, allow-listed repository read, test-result retrieval, and proposal operations. Treat repository text, issues, and model output as untrusted.
 5. **GitHub** — source of truth, branches, pull requests, and CI. The agent must not push to `main`, merge, or deploy production.
 6. **Human approval gate** — proposals and test evidence first; owner approval before external account connections, production deployment, billing changes, or financial actions.
@@ -76,9 +76,9 @@ Therefore, do not keep repairing this as the primary architecture. Preserve it a
 - Verify no automatic merge, production deploy, paid fallback, or financial action is possible.
 - Only after all tests pass may this become the primary runtime.
 
-## Current blocker / required owner action
+## Implementation status (2026-10-28)\n\nA development-only Worker scaffold now exists at `cloudflare/agent-runtime/`: health endpoint, bearer-protected `/agent` endpoint, strict one-tool allow-list, SQLite Durable Object task persistence, input/model-call validation, Node tests, and Wrangler dry-run CI. The selected model is wired in code but has not been called in a live Cloudflare deployment. CI results must be checked before claiming the current head passes.\n\n## Current blocker / required owner action
 
-The current connected tools can operate on GitHub and Vercel, but there is no Cloudflare account/deployment connector available in this session, and no verified Cloudflare credentials or deployed Worker are available. I can prepare and validate the code and open a review PR, but I cannot honestly claim a Cloudflare deployment or durable runtime until the owner connects/authorizes the Cloudflare account and the deployment can be tested.
+The current connected tools can operate on GitHub and Vercel, but there is no Cloudflare account/deployment connector available in this session, and no verified Cloudflare credentials or deployed Worker are available. I can prepare and validate the code and open a review PR, but I cannot honestly claim a Cloudflare deployment or durable runtime until an authorized Cloudflare deployment path is available and the live runtime can be tested.
 
 ## Rollback
 
