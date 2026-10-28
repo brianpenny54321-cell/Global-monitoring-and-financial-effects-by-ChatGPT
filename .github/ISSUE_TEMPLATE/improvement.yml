@@ -1,0 +1,53 @@
+name: AI or human improvement proposal
+description: Propose a reviewable, testable improvement
+title: "[Improvement] "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: "Never include API keys, credentials, personal data, or financial account details."
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem and expected benefit
+    validations:
+      required: true
+  - type: dropdown
+    id: component
+    attributes:
+      label: Platform or component
+      options:
+        - Shared core
+        - ChatGPT / OpenAI adapter
+        - Other AI platform adapter
+        - GitHub workflow
+        - Vercel deployment
+        - Monitoring / data sources
+        - Security and safeguards
+    validations:
+      required: true
+  - type: textarea
+    id: verification
+    attributes:
+      label: Verification plan
+      description: What tests or observable evidence would show this works?
+    validations:
+      required: true
+  - type: textarea
+    id: risks
+    attributes:
+      label: Risks and compatibility
+      description: How will existing deployments remain isolated?
+    validations:
+      required: true
+  - type: checkboxes
+    id: safeguards
+    attributes:
+      label: Safety checks
+      options:
+        - label: No secrets or private information included
+          required: true
+        - label: No real financial transactions involved
+          required: true
+        - label: Production changes will be reviewed and verified
+          required: true
