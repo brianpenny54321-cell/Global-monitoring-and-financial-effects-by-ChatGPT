@@ -21,5 +21,8 @@
         "TaskAgent"
       ]
     }
-  ]
+  ],
+  "ai": {
+    "binding": "AI"
+  }
 }
