@@ -5,11 +5,13 @@ on:
     paths:
       - "cloudflare/agent-runtime/**"
       - ".github/workflows/validate-agent-runtime.yml"
+      - ".github/workflows/deploy-agent-runtime-dev.yml"
   push:
     branches: [main]
     paths:
       - "cloudflare/agent-runtime/**"
       - ".github/workflows/validate-agent-runtime.yml"
+      - ".github/workflows/deploy-agent-runtime-dev.yml"
   workflow_dispatch:
 
 permissions:
