@@ -1,5 +1,5 @@
 import { DurableObject } from "cloudflare:workers";
-import { jsonResponse, runAllowlistedTool, validateTask } from "./core.mjs";
+import { jsonResponse, runAllowlistedTool, validateAgentTask, validateTask, extractSha256ToolCall } from "./core.mjs";
 
 const BUILD_ID = "cloudflare-agent-runtime-v1";
 
@@ -105,6 +105,62 @@ export default {
       if (!taskId) return jsonResponse({ error: "taskId query parameter is required." }, 400);
       const stub = env.TASKS.get(env.TASKS.idFromName(taskId));
       return stub.fetch(`https://task-agent.internal/task?taskId=${encodeURIComponent(taskId)}`);
+    }
+
+    if (url.pathname === "/agent" && !isAuthorized(request, env)) {
+      return jsonResponse({ error: "Unauthorized. Configure a development-only AGENT_API_TOKEN secret before using agent endpoints." }, 401, { "www-authenticate": "Bearer" });
+    }
+    if (url.pathname === "/agent" && request.method === "POST") {
+      if (!env.AI || typeof env.AI.run !== "function") {
+        return jsonResponse({ error: "Workers AI binding is not configured." }, 503);
+      }
+      let body;
+      try { body = await request.json(); } catch { return jsonResponse({ error: "Body must be valid JSON." }, 400); }
+      const validation = validateAgentTask(body);
+      if (!validation.ok) return jsonResponse({ error: validation.error }, 400);
+      const task = validation.value;
+      let modelResponse;
+      try {
+        modelResponse = await env.AI.run("@cf/zai-org/glm-4.7-flash", {
+          messages: [
+            { role: "system", content: "You are a constrained tool-using agent. You must call the provided sha256_text tool exactly once, passing the input string exactly as provided by the user. Never invent or alter the input. Do not request other tools." },
+            { role: "user", content: JSON.stringify({ instruction: task.instruction, input: task.input }) }
+          ],
+          tools: [{
+            type: "function",
+            function: {
+              name: "sha256_text",
+              description: "Compute SHA-256 of the exact supplied input string. This tool has no external side effects.",
+              parameters: {
+                type: "object",
+                properties: { text: { type: "string", maxLength: 4096 } },
+                required: ["text"],
+                additionalProperties: false
+              }
+            }
+          }],
+          tool_choice: "required",
+          parallel_tool_calls: false,
+          max_tokens: 128,
+          temperature: 0
+        });
+      } catch {
+        return jsonResponse({ error: "Workers AI request failed. Check free-tier availability and model access; no paid fallback is configured." }, 503);
+      }
+      const selected = extractSha256ToolCall(modelResponse, task.input);
+      if (!selected.ok) return jsonResponse({ error: selected.error, model: "@cf/zai-org/glm-4.7-flash" }, 502);
+      const stub = env.TASKS.get(env.TASKS.idFromName(task.taskId));
+      const result = await stub.fetch("https://task-agent.internal/task", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ taskId: task.taskId, tool: selected.value.tool, input: selected.value.input })
+      });
+      const payload = await result.json();
+      if (!result.ok) return jsonResponse({ error: payload.error || "Tool execution failed.", task: payload.task }, result.status);
+      return jsonResponse({
+        task: payload.task,
+        agent: { model: "@cf/zai-org/glm-4.7-flash", toolCallValidated: true }
+      }, result.status);
     }
     return jsonResponse({ error: "Not found." }, 404);
   },
