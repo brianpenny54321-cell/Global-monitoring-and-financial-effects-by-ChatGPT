@@ -1,0 +1,37 @@
+name: Repository validation
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-docs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Check required project documents
+        shell: bash
+        run: |
+          set -euo pipefail
+          for file in README.md REQUIREMENTS.md ARCHITECTURE.md CONTRIBUTING.md docs/PLATFORM-INTEGRATIONS.md docs/OPERATIONS.md; do
+            if [ ! -s "$file" ]; then
+              echo "::error::Missing or empty required file: $file"
+              exit 1
+            fi
+          done
+          echo "Required project documents are present."
+      - name: Check for common committed secret patterns
+        shell: bash
+        run: |
+          set -euo pipefail
+          if grep -RInE --exclude-dir=.git --exclude='validate.yml' '(gh[pousr]_[A-Za-z0-9_]{20,}|AKIA[0-9A-Z]{16}|-----BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY-----)' .; then
+            echo "::error::Possible secret material found. Review matches before proceeding."
+            exit 1
+          fi
+          echo "No common secret patterns detected."
