@@ -41,5 +41,5 @@ Do not deploy production, add billing, or connect a GitHub write token as part o
 - Deployment: not performed.
 - Live endpoint: none verified.
 - Durable storage: implemented in code, not yet tested against a live Cloudflare Durable Object.
-- Model/tool-calling: intentionally deferred until free-tier eligibility and tool-call behavior are verified.
+- Model/tool-calling: implemented against Workers AI model `@cf/zai-org/glm-4.7-flash`; live model access and actual model tool-call behavior remain unverified until deployed and exercised.
 - CI: workflow added; results must be read from GitHub Actions before claiming tests passed.
