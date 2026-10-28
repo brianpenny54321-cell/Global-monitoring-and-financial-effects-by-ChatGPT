@@ -49,10 +49,16 @@ export class TaskAgent extends DurableObject {
 
     const task = validation.value;
     const existing = this.ctx.storage.sql.exec(
-      "SELECT task_id, status, tool_name, result_json, error, created_at, updated_at FROM tasks WHERE task_id = ?",
+      "SELECT task_id, status, tool_name, input, result_json, error, created_at, updated_at FROM tasks WHERE task_id = ?",
       task.taskId,
     ).toArray()[0];
-    if (existing) return jsonResponse({ task: { ...existing, result: existing.result_json ? JSON.parse(existing.result_json) : null, result_json: undefined }, idempotentReplay: true });
+    if (existing) {
+      if (existing.tool_name !== task.tool || existing.input !== task.input) {
+        return jsonResponse({ error: "taskId already exists with a different tool or input." }, 409);
+      }
+      const { input: _storedInput, ...publicExisting } = existing;
+      return jsonResponse({ task: { ...publicExisting, result: existing.result_json ? JSON.parse(existing.result_json) : null, result_json: undefined }, idempotentReplay: true });
+    }
 
     const now = new Date().toISOString();
     this.ctx.storage.sql.exec(
