@@ -5,7 +5,8 @@
 This is a **development scaffold**, not a deployed service.
 
 - `GET /health`: reports a small, non-secret health/build response.
-- `POST /tasks`: accepts a bounded deterministic task only when a development-only `AGENT_API_TOKEN` secret is configured.\n- `POST /agent`: asks Workers AI to call the single allow-listed tool and validates the model's function call before execution; requires the same bearer token and Workers AI binding.
+- `POST /tasks`: accepts a bounded deterministic task only when a development-only `AGENT_API_TOKEN` secret is configured.
+- `POST /agent`: asks Workers AI to call the single allow-listed tool and validates the model's function call before execution; requires the same bearer token and Workers AI binding.
 - `GET /tasks?taskId=...`: reads a task record after authentication.
 - SQLite-backed Durable Object: stores task status and the deterministic tool result.
 - Initial allow-listed tool: `sha256_text`, a harmless server-side SHA-256 operation.
@@ -42,4 +43,4 @@ Do not deploy production, add billing, or connect a GitHub write token as part o
 - Live endpoint: none verified.
 - Durable storage: implemented in code, not yet tested against a live Cloudflare Durable Object.
 - Model/tool-calling: implemented against Workers AI model `@cf/zai-org/glm-4.7-flash`; live model access and actual model tool-call behavior remain unverified until deployed and exercised.
-- CI: workflow added; results must be read from GitHub Actions before claiming tests passed.
+- CI: latest reported runtime validation and repository validation workflows passed on commit `68420b972c845c83704b14c3d29073373e77666c`. These checks validate tests, syntax, documentation/security patterns, and the Wrangler dry-run bundle; they do not verify a live Cloudflare deployment.
