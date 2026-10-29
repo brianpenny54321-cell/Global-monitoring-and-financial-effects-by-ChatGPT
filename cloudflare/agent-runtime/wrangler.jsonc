@@ -1,0 +1,28 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "global-monitoring-agent-runtime-dev",
+  "main": "src/index.js",
+  "compatibility_date": "2026-10-28",
+  "observability": {
+    "enabled": true
+  },
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "TASKS",
+        "class_name": "TaskAgent"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": [
+        "TaskAgent"
+      ]
+    }
+  ],
+  "ai": {
+    "binding": "AI"
+  }
+}
